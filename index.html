@@ -1,14 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Mặt Trời 3D</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Galaxy Love Planet 💜</title>
+<style>
+  html, body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+  }
+  #tapText {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Poppins', sans-serif;
+    font-size: 32px;
+    color: #ff80ff;
+    text-shadow: 0 0 20px #ff00ff;
+    cursor: pointer;
+    user-select: none;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+</style>
 </head>
 <body>
-    <div id="container"></div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-    <script src="script.js"></script>
+<div id="tapText">Chạm vào 💫</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+let renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+// Nền sao
+const starsGeometry = new THREE.BufferGeometry();
+const starCount = 1000;
+const starVertices = [];
+for (let i = 0; i < starCount; i++) {
+  const x = (Math.random() - 0.5) * 2000;
+  const y = (Math.random() - 0.5) * 2000;
+  const z = (Math.random() - 0.5) * 2000;
+  starVertices.push(x, y, z);
+}
+starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff });
+const stars = new THREE.Points(starsGeometry, starsMaterial);
+scene.add(stars);
+
+// Hành tinh tím
+const planetGeometry = new THREE.SphereGeometry(2.5, 64, 64);
+const planetMaterial = new THREE.MeshPhongMaterial({
+  color: 0xd500f9,
+  emissive: 0x9c27b0,
+  shininess: 100,
+});
+const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+scene.add(planet);
+
+// Vòng sáng quanh hành tinh
+const ringGeometry = new THREE.RingGeometry(3, 3.5, 128);
+const ringMaterial = new THREE.MeshBasicMaterial({
+  color: 0xff80ff,
+  side: THREE.DoubleSide,
+  transparent: true,
+  opacity: 0.7
+});
+const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+ring.rotation.x = Math.PI / 2;
+scene.add(ring);
+
+// Ánh sáng
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+const pointLight = new THREE.PointLight(0xff00ff, 2);
+pointLight.position.set(10, 10, 10);
+scene.add(pointLight);
+
+camera.position.z = 8;
+
+// Hạt trái tim
+let heartParticles;
+function createHearts() {
+  const heartsGeometry = new THREE.BufferGeometry();
+  const count = 1000;
+  const positions = [];
+  const colors = [];
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 20 + 5;
+    const x = Math.cos(angle) * radius;
+    const y = (Math.random() - 0.5) * 10;
+    const z = Math.sin(angle) * radius;
+    positions.push(x, y, z);
+    const color = new THREE.Color(`hsl(${Math.random()*360},100%,70%)`);
+    colors.push(color.r, color.g, color.b);
+  }
+  heartsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  heartsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  const heartsMaterial = new THREE.PointsMaterial({
+    size: 0.3,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+  });
+  heartParticles = new THREE.Points(heartsGeometry, heartsMaterial);
+  scene.add(heartParticles);
+}
+
+// Animation
+let heartsVisible = false;
+document.getElementById("tapText").addEventListener("click", () => {
+  if (!heartsVisible) {
+    createHearts();
+    document.getElementById("tapText").style.display = "none";
+    heartsVisible = true;
+  }
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  planet.rotation.y += 0.01;
+  ring.rotation.z += 0.005;
+  stars.rotation.y += 0.0005;
+
+  if (heartParticles) {
+    heartParticles.rotation.y += 0.001;
+    heartParticles.rotation.x += 0.0005;
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
 </body>
 </html>
